@@ -1,118 +1,114 @@
-Attendance System
+\# 📹 Attendance System — Edge Video Streaming
 
 
 
-A real-time edge video streaming system that captures frames from multiple RTSP/IP cameras and forwards them to a remote Kafka broker for downstream processing.
+A real-time edge video streaming system that captures frames from multiple RTSP/IP cameras and forwards them to a remote Kafka broker for downstream processing (e.g. AI-based attendance detection).
 
 
 
-Architecture
+\---
 
 
+
+\## 🏗️ Architecture
+
+
+
+```
 
 ┌─────────────────────────────────────────────┐
 
-│              Edge Client Machine            │
+│              Edge Client Machine             │
 
-│                                             │
+│                                               │
 
-│  Camera D1 ─┐                               │
+│  Camera D1 ─┐                                │
 
-│  Camera D2 ─┤                               │
+│  Camera D2 ─┤                                │
 
-│  Camera D3 ─┤                               │
+│  Camera D3 ─┤                                │
 
-│     ...     ├──> OpenCV ──> JPEG Encoding   │
+│    ...      ├──> OpenCV ──> JPEG Encoding    │
 
-│  Camera D19 ┤              │                │
+│  Camera D19 ┤                     │          │
 
-│  Camera D20 ┘              ▼                │
+│  Camera D20 ┘                     ▼          │
 
-│                       Kafka Producer        │
+│                            Kafka Producer     │
 
-└───────────────────────────┬─────────────────┘
+└───────────────────────────┬───────────────────┘
 
-&#x20;                           │
+&#x20;                            │
 
 &#x20;                    Tailscale / Network
 
-&#x20;                           │
+&#x20;                            │
 
-&#x20;                           ▼
+&#x20;                            ▼
 
-&#x20;                ┌─────────────────────┐
+&#x20;                 ┌─────────────────────┐
 
-&#x20;                │    Kafka Broker     │
+&#x20;                 │     Kafka Broker    │
 
-&#x20;                │                     │
+&#x20;                 │                     │
 
-&#x20;                │   camera.frames     │
+&#x20;                 │    camera.frames    │
 
-&#x20;                └──────────┬──────────┘
+&#x20;                 └──────────┬──────────┘
 
-&#x20;                           │
+&#x20;                            │
 
-&#x20;                           ▼
+&#x20;                            ▼
 
-&#x20;                Downstream Consumers
+&#x20;                  Downstream Consumers
 
-
-
-Features
+```
 
 
 
-Supports multiple RTSP/IP cameras.
+\---
 
 
 
-One background worker thread per camera.
+\## ✨ Features
 
 
 
-OpenCV-based RTSP frame capture.
+\- Supports multiple RTSP/IP cameras
+
+\- One background worker thread per camera
+
+\- OpenCV-based RTSP frame capture
+
+\- JPEG compression before transmission
+
+\- Kafka-based frame streaming
+
+\- Camera IDs used as Kafka message keys
+
+\- Configurable frame rate and JPEG quality
+
+\- Automatic camera reconnection
+
+\- Kafka retries and connection timeouts
+
+\- Per-camera logging and frame counters
+
+\- Designed for low-bandwidth edge-to-server transmission
+
+\- Supports remote Kafka brokers over networks such as Tailscale
 
 
 
-JPEG compression before transmission.
+\---
 
 
 
-Kafka-based frame streaming.
+\## 📁 Project Structure
 
 
 
-Camera IDs used as Kafka message keys.
-
-
-
-Configurable frame rate and JPEG quality.
-
-
-
-Automatic camera reconnection.
-
-
-
-Kafka retries and connection timeouts.
-
-
-
-Per-camera logging and frame counters.
-
-
-
-Designed for low-bandwidth edge-to-server transmission.
-
-
-
-Supports remote Kafka brokers over networks such as Tailscale.
-
-
-
-Project Structure
-
-
+```
 
 Attendance/
 
@@ -138,123 +134,49 @@ Attendance/
 
 │
 
-└── .venv/                 # Local only, not committed
+└── .venv/                  # Local only, not committed
 
+```
 
 
-File
 
+| File | Description |
 
+|---|---|
 
-Description
+| `edge\_client.py` | Captures RTSP camera frames and publishes them to Kafka |
 
+| `server\_consumer.py` | Consumes camera frames from Kafka |
 
+| `server\_viewer.py` | Provides server-side frame viewing/processing |
 
-edge\_client.py
+| `docker-compose.yml` | Defines containerized services |
 
+| `requirements-client.txt` | Edge-client Python dependencies |
 
+| `requirements-server.txt` | Server-side Python dependencies |
 
-Captures RTSP camera frames and publishes them to Kafka
+| `SETUP\_GUIDE.md` | Additional setup and deployment instructions |
 
 
 
-server\_consumer.py
+\---
 
 
 
-Consumes camera frames from Kafka
+\## 🖥️ Edge Client
 
 
 
-server\_viewer.py
+The main edge component is `edge\_client.py`. Each configured camera gets a dedicated background worker:
 
 
 
-Provides server-side frame viewing/processing
+```
 
+Camera → OpenCV VideoCapture → Frame → FPS Throttling → JPEG Encoding → Kafka Producer → camera.frames
 
-
-docker-compose.yml
-
-
-
-Defines containerized services
-
-
-
-requirements-client.txt
-
-
-
-Edge-client Python dependencies
-
-
-
-requirements-server.txt
-
-
-
-Server-side Python dependencies
-
-
-
-SETUP\_GUIDE.md
-
-
-
-Additional setup and deployment instructions
-
-
-
-Edge Client
-
-
-
-The main edge component is edge\_client.py.
-
-
-
-Each configured camera gets a dedicated background worker:
-
-
-
-Camera
-
-&#x20;  │
-
-&#x20;  ▼
-
-OpenCV VideoCapture
-
-&#x20;  │
-
-&#x20;  ▼
-
-Frame
-
-&#x20;  │
-
-&#x20;  ▼
-
-FPS Throttling
-
-&#x20;  │
-
-&#x20;  ▼
-
-JPEG Encoding
-
-&#x20;  │
-
-&#x20;  ▼
-
-Kafka Producer
-
-&#x20;  │
-
-&#x20;  ▼
-
-camera.frames
+```
 
 
 
@@ -262,61 +184,41 @@ Each worker:
 
 
 
-Connects to its RTSP stream.
+\- Connects to its RTSP stream
+
+\- Reads frames using OpenCV
+
+\- Limits the transmission rate
+
+\- Encodes selected frames as JPEG
+
+\- Publishes JPEG bytes to Kafka
+
+\- Reconnects automatically after failures
+
+\- Tracks the number of frames sent
 
 
 
-Reads frames using OpenCV.
+\---
 
 
 
-Limits the transmission rate.
+\## ⚙️ Kafka Configuration
 
 
 
-Encodes selected frames as JPEG.
+The edge client uses the `KAFKA\_BOOTSTRAP\_SERVERS` environment variable.
 
 
 
-Publishes JPEG bytes to Kafka.
+\*\*Default broker:\*\* `100.76.209.67:9092`
+
+\*\*Default topic:\*\* `camera.frames`
 
 
 
-Reconnects automatically after failures.
-
-
-
-Tracks the number of frames sent.
-
-
-
-Kafka Configuration
-
-
-
-The edge client uses the KAFKA\_BOOTSTRAP\_SERVERS environment variable.
-
-
-
-Default broker:
-
-
-
-100.76.209.67:9092
-
-
-
-Default topic:
-
-
-
-camera.frames
-
-
-
-Example:
-
-
+```powershell
 
 $env:KAFKA\_BOOTSTRAP\_SERVERS="YOUR\_KAFKA\_SERVER:9092"
 
@@ -324,87 +226,31 @@ $env:KAFKA\_TOPIC="camera.frames"
 
 python edge\_client.py
 
-
-
-Runtime Configuration
-
-
-
-Variable
+```
 
 
 
-Default
+\### Runtime Configuration
 
 
 
-Description
+| Variable | Default | Description |
+
+|---|---|---|
+
+| `KAFKA\_BOOTSTRAP\_SERVERS` | `100.76.209.67:9092` | Kafka broker address |
+
+| `KAFKA\_TOPIC` | `camera.frames` | Kafka topic |
+
+| `SEND\_FPS` | `1` | Frames sent per second per camera |
+
+| `JPEG\_QUALITY` | `60` | JPEG compression quality |
+
+| `RECONNECT\_DELAY` | `3.0` | Camera reconnection delay in seconds |
 
 
 
-KAFKA\_BOOTSTRAP\_SERVERS
-
-
-
-100.76.209.67:9092
-
-
-
-Kafka broker address
-
-
-
-KAFKA\_TOPIC
-
-
-
-camera.frames
-
-
-
-Kafka topic
-
-
-
-SEND\_FPS
-
-
-
-1
-
-
-
-Frames sent per second per camera
-
-
-
-JPEG\_QUALITY
-
-
-
-60
-
-
-
-JPEG compression quality
-
-
-
-RECONNECT\_DELAY
-
-
-
-3.0
-
-
-
-Camera reconnection delay in seconds
-
-
-
-Example:
-
-
+```powershell
 
 $env:SEND\_FPS="2"
 
@@ -414,27 +260,29 @@ $env:RECONNECT\_DELAY="5"
 
 python edge\_client.py
 
-
-
-With 20 cameras at 1 FPS:
-
-
-
-20 cameras × 1 frame/second = approximately 20 frames/second
+```
 
 
 
-Actual throughput depends on camera resolution, network conditions, encoding time, and Kafka performance.
+> With 20 cameras at 1 FPS: `20 cameras × 1 frame/second ≈ 20 frames/second`
+
+> Actual throughput depends on camera resolution, network conditions, encoding time, and Kafka performance.
 
 
 
-Camera Configuration
+\---
 
 
 
-Cameras are configured as (camera\_id, rtsp\_url) pairs:
+\## 📷 Camera Configuration
 
 
+
+Cameras are configured as `(camera\_id, rtsp\_url)` pairs:
+
+
+
+```python
 
 CAMERAS = \[
 
@@ -444,29 +292,35 @@ CAMERAS = \[
 
 ]
 
+```
+
 
 
 Each camera must have a unique ID.
 
 
 
-Security
+\---
 
 
 
-Do not commit real camera credentials, passwords, API keys, or other secrets to GitHub.
+\## 🔒 Security
 
 
 
-Use environment variables or a secure configuration mechanism for sensitive RTSP credentials.
+\- Do \*\*not\*\* commit real camera credentials, passwords, API keys, or other secrets to GitHub
+
+\- Use environment variables or a secure configuration mechanism for sensitive RTSP credentials
+
+\- If credentials have already been exposed in Git history, rotate them and remove the secret from repository history when necessary
 
 
 
-If credentials have already been exposed in Git history, rotate them and remove the secret from repository history when necessary.
+\---
 
 
 
-Kafka Message Format
+\## 📨 Kafka Message Format
 
 
 
@@ -474,103 +328,71 @@ Each published message contains:
 
 
 
-Key
-
-
-
-The camera ID:
-
-
-
-d1
-
-
-
-Value
-
-
-
-The JPEG-encoded frame as raw bytes.
-
-
-
-Header
-
-
-
-A timestamp header:
-
-
-
-ts
-
-
-
-The timestamp contains the Unix timestamp associated with the frame transmission.
-
-
-
-Conceptually:
-
-
+```
 
 Kafka Message
 
-├── Key: camera\_id
+├── Key:     camera\_id       (e.g. "d1")
 
-├── Value: JPEG frame bytes
+├── Value:   JPEG frame bytes
 
 └── Header:
 
-&#x20;   └── ts: Unix timestamp
+&#x20;   └── ts:  Unix timestamp of frame transmission
+
+```
 
 
 
-Installation
+\---
 
 
 
-Create a Python virtual environment:
+\## 🚀 Installation
 
 
+
+```bash
+
+\# Create a virtual environment
 
 python -m venv .venv
 
 
 
-Activate it:
-
-
+\# Activate it (Windows PowerShell)
 
 .venv\\Scripts\\Activate.ps1
 
 
 
-Install edge-client dependencies:
-
-
+\# Install edge-client dependencies
 
 pip install -r requirements-client.txt
 
 
 
-Install server dependencies when setting up the server:
-
-
+\# Install server dependencies when setting up the server
 
 pip install -r requirements-server.txt
 
-
-
-Running the Edge Client
+```
 
 
 
-From the project directory:
+\---
 
 
+
+\## ▶️ Running the Edge Client
+
+
+
+```bash
 
 python edge\_client.py
+
+```
 
 
 
@@ -578,15 +400,21 @@ The client will start one worker per configured camera and attempt to publish fr
 
 
 
-Example startup log:
+\*\*Example startup log:\*\*
+
+```
+
+Started 20 camera worker(s) -> topic 'camera.frames'
+
+```
 
 
 
-Started 20 camera worker(s) -> topic 'camera.frames' on <kafka-server>
+\---
 
 
 
-Monitoring
+\## 📊 Monitoring
 
 
 
@@ -594,45 +422,43 @@ The client periodically reports camera worker status:
 
 
 
+```
+
 \[d1] alive, frames sent so far: 120
 
 \[d2] alive, frames sent so far: 119
 
 \[d3] alive, frames sent so far: 121
 
-
-
-A worker can be:
-
-
-
-alive
-
-DEAD
+```
 
 
 
-Connection and publishing failures are logged.
+A worker can be `alive` or `DEAD`. Connection and publishing failures are logged.
 
 
 
-Reconnection
+\---
 
 
 
-If a camera cannot be opened, the worker waits for RECONNECT\_DELAY and retries.
+\## 🔁 Reconnection
 
 
 
-If a frame read fails, the current connection is released and the worker attempts to reconnect.
+\- If a camera cannot be opened, the worker waits for `RECONNECT\_DELAY` and retries
+
+\- If a frame read fails, the current connection is released and the worker attempts to reconnect
+
+\- This allows temporary camera or network failures to recover without restarting the entire application
 
 
 
-This allows temporary camera or network failures to recover without restarting the entire application.
+\---
 
 
 
-JPEG Compression
+\## 🗜️ JPEG Compression
 
 
 
@@ -640,51 +466,37 @@ Frames are encoded using OpenCV JPEG compression.
 
 
 
-Default quality:
+\- \*\*Default quality:\*\* `60`
+
+\- Higher quality → better image quality, more bandwidth \& larger Kafka messages
+
+\- Lower quality → reduced bandwidth, lower image quality
 
 
 
-60
+\---
 
 
 
-Higher quality provides better image quality but increases bandwidth and Kafka message size.
+\## 🏭 Kafka Producer Configuration
 
 
 
-Lower quality reduces bandwidth at the cost of image quality.
+| Setting | Value |
 
+|---|---|
 
+| `acks` | `1` |
 
-Kafka Producer Configuration
+| `retries` | `5` |
 
+| `linger\_ms` | `20` |
 
+| `request\_timeout\_ms` | `10000` |
 
-The producer uses:
+| `max\_block\_ms` | `10000` |
 
-
-
-acks=1
-
-
-
-retries=5
-
-
-
-linger\_ms=20
-
-
-
-request\_timeout\_ms=10000
-
-
-
-max\_block\_ms=10000
-
-
-
-max\_request\_size=2 MB
+| `max\_request\_size` | `2 MB` |
 
 
 
@@ -692,125 +504,95 @@ The camera ID is used as the Kafka message key.
 
 
 
-Troubleshooting
+\---
 
 
 
-Camera connection fails
+\## 🛠️ Troubleshooting
 
 
 
-Check:
+<details>
 
+<summary><strong>Camera connection fails</strong></summary>
 
 
-Camera IP address.
 
+\- Camera IP address
 
+\- RTSP URL
 
-RTSP URL.
+\- Camera credentials
 
+\- Camera network connectivity
 
+\- RTSP port
 
-Camera credentials.
+\- Firewall rules
 
+\- Whether the edge machine can reach the camera
 
+</details>
 
-Camera network connectivity.
 
 
+<details>
 
-RTSP port.
+<summary><strong>Kafka connection fails</strong></summary>
 
 
 
-Firewall rules.
+\- Kafka broker address
 
+\- Kafka port
 
+\- Tailscale/network connectivity
 
-Whether the edge machine can reach the camera.
+\- Kafka listener configuration
 
+\- Firewall rules
 
+\- Kafka availability
 
-Kafka connection fails
+\- Topic configuration
 
+</details>
 
 
-Check:
 
+<details>
 
+<summary><strong>No frames are received</strong></summary>
 
-Kafka broker address.
 
 
+\- Camera connection
 
-Kafka port.
+\- OpenCV `VideoCapture` status
 
+\- Kafka broker connectivity
 
+\- Kafka topic
 
-Tailscale/network connectivity.
+\- Consumer configuration
 
+\- JPEG encoding
 
+</details>
 
-Kafka listener configuration.
 
 
+<details>
 
-Firewall rules.
+<summary><strong>Network usage is too high</strong></summary>
 
 
 
-Kafka availability.
+Reduce `SEND\_FPS` and/or `JPEG\_QUALITY`:
 
 
 
-Topic configuration.
-
-
-
-No frames are received
-
-
-
-Check:
-
-
-
-Camera connection.
-
-
-
-OpenCV VideoCapture status.
-
-
-
-Kafka broker connectivity.
-
-
-
-Kafka topic.
-
-
-
-Consumer configuration.
-
-
-
-JPEG encoding.
-
-
-
-Network usage is too high
-
-
-
-Reduce SEND\_FPS and/or JPEG\_QUALITY.
-
-
-
-Example:
-
-
+```powershell
 
 $env:SEND\_FPS="1"
 
@@ -818,17 +600,21 @@ $env:JPEG\_QUALITY="50"
 
 python edge\_client.py
 
+```
 
-
-Performance Considerations
-
-
-
-For 20 cameras at 1 FPS, the edge client attempts approximately:
+</details>
 
 
 
-20 frames/second
+\---
+
+
+
+\## ⚡ Performance Considerations
+
+
+
+For 20 cameras at 1 FPS, the edge client attempts approximately \*\*20 frames/second\*\*.
 
 
 
@@ -836,31 +622,19 @@ Actual bandwidth depends heavily on:
 
 
 
-Camera resolution.
+\- Camera resolution
 
+\- JPEG quality
 
+\- Frame rate
 
-JPEG quality.
+\- Scene complexity
 
+\- Network conditions
 
+\- Kafka configuration
 
-Frame rate.
-
-
-
-Scene complexity.
-
-
-
-Network conditions.
-
-
-
-Kafka configuration.
-
-
-
-CPU performance.
+\- CPU performance
 
 
 
@@ -868,55 +642,41 @@ Increasing FPS or JPEG quality increases network and Kafka throughput requiremen
 
 
 
-Future Improvements
+\---
 
 
 
-Potential improvements include:
+\## 🗺️ Future Improvements
 
 
 
-Move all camera credentials to environment variables.
+\- \[ ] Move all camera credentials to environment variables
+
+\- \[ ] Add centralized camera configuration
+
+\- \[ ] Add health checks and metrics
+
+\- \[ ] Add Prometheus/Grafana monitoring
+
+\- \[ ] Add adaptive FPS based on network conditions
+
+\- \[ ] Add hardware-accelerated video encoding
+
+\- \[ ] Add Kafka TLS/authentication
+
+\- \[ ] Add structured logging
+
+\- \[ ] Add automatic service startup
+
+\- \[ ] Add downstream AI-based attendance detection/recognition
 
 
 
-Add centralized camera configuration.
+\---
 
 
 
-Add health checks and metrics.
-
-
-
-Add Prometheus/Grafana monitoring.
-
-
-
-Add adaptive FPS based on network conditions.
-
-
-
-Add hardware-accelerated video encoding.
-
-
-
-Add Kafka TLS/authentication.
-
-
-
-Add structured logging.
-
-
-
-Add automatic service startup.
-
-
-
-Add downstream AI-based attendance detection/recognition.
-
-
-
-License
+\## 📄 License
 
 
 
@@ -924,13 +684,17 @@ Add the project's license here if applicable.
 
 
 
-Author
+\---
 
 
 
-Debanu Guha Thakurta
+\## 👤 Author
 
 
 
-Attendance / Edge Video Streaming Project
+\*\*Debanu Guha Thakurta\*\*
+
+
+
+\*Attendance / Edge Video Streaming Project\*
 
