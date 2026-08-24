@@ -1,0 +1,9 @@
+opencv-python
+kafka-python
+numpy
+insightface
+onnxruntime
+sqlalchemy
+psycopg2-binary
+fastapi
+uvicorn
